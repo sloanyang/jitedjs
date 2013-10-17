@@ -2,10 +2,10 @@
 #ifndef BYTE_CODE_DEFINES_H
 #define BYTE_CODE_DEFINES_H
 
-#include "JSVM.h"
-#include "JSFunction.h"
-#include "JSArray.h"
-#include "JSString.h"
+#include "../runtime/JSVM.h"
+#include "../runtime/JSFunction.h"
+#include "../runtime/JSArray.h"
+#include "../runtime/JSString.h"
 
 enum ByteCodeType {
     BC_NewFunction, BC_NewArray,

@@ -1,8 +1,8 @@
 
-#include "pch.h"
+#include "../runtime/pch.h"
 #include "ByteCode.h"
 #include "ByteCodeDefines.h"
-#include "AST.h"
+#include "../runtime/AST.h"
 
 class LocalVarIDAllocator {
 public:

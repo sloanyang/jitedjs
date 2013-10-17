@@ -8,7 +8,7 @@ options {
 }
 
 @lexer::header {
-#include "pch.h"
+#include "../runtime/pch.h"
 }
 @lexer::traits {
     class JSMinusLexer; 
@@ -18,13 +18,13 @@ options {
 }
 
 @parser::header {
-#include "pch.h"
+#include "../runtime/pch.h"
 #include "JSMinusLexer.hpp"
-#include "AST.h"
-#include "SymbolTable.h"
-#include "ByteCode.h"
-#include "JSVM.h"
-#include "JSFunction.h"
+#include "../runtime/AST.h"
+#include "../runtime/SymbolTable.h"
+#include "../bytecode/ByteCode.h"
+#include "../runtime/JSVM.h"
+#include "../runtime/JSFunction.h"
 }
 @parser::members {
 

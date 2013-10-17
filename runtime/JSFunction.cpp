@@ -2,7 +2,7 @@
 #include "pch.h"
 #include "JSFunction.h"
 #include "JSVM.h"
-#include "ByteCode.h"
+#include "../bytecode/ByteCode.h"
 
 JSValue Function::callFromC(JSValue* argsBegin, JSValue* argsEnd) {
     JSValue r;

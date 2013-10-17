@@ -19,7 +19,7 @@ else
 CXXFLAGS += -O3 -DNDEBUG
 endif
 
-pch_file =pch.h
+pch_file =runtime/pch.h
 
 build: build_actions update_pch main
 rebuild: clean
@@ -32,7 +32,7 @@ clean: clean_actions
 	rm -f main $(objs) $(all_deps) $(pch_file).gch
 
 clean_actions:
-	rm -f parser/*.tokens parser/*.hpp parser/JSMinusLexer.* parser/JSMinusParser.*
+	rm -f *.tokens parser/*.hpp parser/JSMinusLexer.* parser/JSMinusParser.*
 
 update_pch: $(pch_file).gch
 
