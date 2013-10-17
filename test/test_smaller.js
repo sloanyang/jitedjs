@@ -1,7 +1,7 @@
 
 a = [1, 2, 3]
 a = ['123', tostring(3)]
-a = 'a' + 4
+a = 'a' + 'h'
 println(a)
 println(collectgarbage())
 for (var i = 0; i < 10; ++i) {
