@@ -10,6 +10,7 @@
 #include "runtime/JSString.h"
 #include "runtime/JSArray.h"
 #include "runtime/GCObject.h"
+#include "interpreter/Interpreter.h"
 
 static JSValue loadFile(const char* fileName) {
     JSMinusLexer::InputStreamType input((ANTLR_UINT8*)fileName, ANTLR_ENC_8BIT);

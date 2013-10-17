@@ -36,7 +36,7 @@ clean_actions:
 
 update_pch: $(pch_file).gch
 
-srcs = $(wildcard *.cpp runtime/*.cpp bytecode/*.cpp parser/*.cpp)
+srcs = $(wildcard *.cpp runtime/*.cpp bytecode/*.cpp parser/*.cpp interpreter/*.cpp)
 objs = $(srcs:.cpp=.o)
 all_deps = $(srcs:.cpp=.d)
 exist_deps = $(wildcard *.d)

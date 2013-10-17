@@ -20,7 +20,7 @@ How to build
 
 Build Environments:
 
-Ubuntu 11.10 x86-64 tested. But should be ok for most linux system.
+Ubuntu 11.10 x86-64 java version "1.6.0_30" tested. But should be ok for most linux system.
 
 Step:
 

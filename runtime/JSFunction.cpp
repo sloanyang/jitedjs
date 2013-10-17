@@ -3,6 +3,7 @@
 #include "JSFunction.h"
 #include "JSVM.h"
 #include "../bytecode/ByteCode.h"
+#include "../interpreter/Interpreter.h"
 
 JSValue Function::callFromC(JSValue* argsBegin, JSValue* argsEnd) {
     JSValue r;
