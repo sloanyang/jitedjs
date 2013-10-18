@@ -64,8 +64,8 @@ private:
     static JSVM *s_ins;
 private:
     unordered_map<JSValue, JSValue> m_globals;
-    vector<JSValue> m_values;
-    vector<StackFrame> m_frames;
+    vector<JSValue> m_values;		//Memory allocated for stack
+    vector<StackFrame> m_frames;	//Memory allocated for 
     vector<FuncMetaPtr> m_metas;
 };
 

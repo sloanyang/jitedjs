@@ -31,6 +31,7 @@ Step:
 
 How to test
 -----------
+./main /test/test.js
 
 
 buildin functions
