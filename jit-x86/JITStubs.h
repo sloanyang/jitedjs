@@ -2,9 +2,10 @@
 #define JISSTUBS_H
 
 #include "../runtime/JSValue.h"
+#include "../runtime/JSVM.h"
 
 struct JITStackFrame {
-    JITValue args[4];
+    JSValue args[4];
     void* padding[2]; // Maintain 16-byte stack alignment.
 
     void* savedEBX;
@@ -14,7 +15,10 @@ struct JITStackFrame {
     void* savedEIP;
 
     void* code;
-    Stack* stack;
+    StackFrame* stack;
 };
+
+
+extern "C" JSValue ctiTrampoline(void* code, StackFrame*);
 
 #endif

@@ -11,6 +11,8 @@
 #include "../jit-x86/AssemblerX86.h"
 #include "../jit-x86/JITStubsX86.h"
 
+char jitedcode[2048];
+
 enum StubType {
     S_NewFunction, S_NewArray,
 
@@ -90,14 +92,17 @@ struct StubHandler<S_Move> {
     FORCE_INLINE static void complie(int code, StackFrame* frame) {
         DECODE_2(BIT_W_VAR_ID, BIT_W_VAR_ID, destID, srcID);
 
-		x86AssemblyBuilder* builder = new x86AssemblyBuilder();
+		x86AssemblyBuilder* builder = new x86AssemblyBuilder(jitedcode);
+		builder->beginBuild();
 		builder->loadLocal(srcID);
 		builder->storeLocal(destID);
+		builder->ret();
+		builder->endBuild();
     }
 
     FORCE_INLINE static void run(int code, StackFrame* frame) {
         DECODE_2(BIT_W_VAR_ID, BIT_W_VAR_ID, destID, srcID);
-        ctiTrampoline();
+        ctiTrampoline(jitedcode, frame);
     }
 
     FORCE_INLINE static string disassemble(int code, FuncMeta* meta) {
