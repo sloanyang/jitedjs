@@ -31,6 +31,9 @@
 #ifndef JITStubsX86_h
 #define JITStubsX86_h
 
+
+#include "JITStubs.h"
+
 // These ASSERTs remind you that, if you change the layout of JITStackFrame, you
 // need to change the assembly trampolines below to match.
 COMPILE_ASSERT(offsetof(struct JITStackFrame, code) % 16 == 0x0, JITStackFrame_maintains_16byte_stack_alignment);

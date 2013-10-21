@@ -16,6 +16,7 @@ static void _execute(StackFrame *stopFrame) {
             case BC_NewFunction: StubHandler<BC_NewFunction>::execute(code, frame); break;
             case BC_NewArray: StubHandler<BC_NewArray>::execute(code, frame); break;
             case BC_Move: StubHandler<BC_Move>::execute(code, frame); break;
+            //case BC_Move: StubHandler<BC_Move>::execute(code, frame); break;
             case BC_Not: StubHandler<BC_Not>::execute(code, frame); break;
             case BC_Minus: StubHandler<BC_Minus>::execute(code, frame); break;
             case BC_Len: StubHandler<BC_Len>::execute(code, frame); break;

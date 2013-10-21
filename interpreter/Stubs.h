@@ -8,6 +8,8 @@
 #include "../runtime/JSString.h"
 
 #include "../bytecode/common.h"
+#include "../jit-x86/AssemblerX86.h"
+#include "../jit-x86/JITStubsX86.h"
 
 enum StubType {
     S_NewFunction, S_NewArray,
@@ -84,6 +86,20 @@ struct StubHandler<S_Move> {
         auto src = VarID(srcID).toValue(frame->localConstPtr);
         *dest = *src;
     }
+
+    FORCE_INLINE static void complie(int code, StackFrame* frame) {
+        DECODE_2(BIT_W_VAR_ID, BIT_W_VAR_ID, destID, srcID);
+
+		x86AssemblyBuilder* builder = new x86AssemblyBuilder();
+		builder->loadLocal(srcID);
+		builder->storeLocal(destID);
+    }
+
+    FORCE_INLINE static void run(int code, StackFrame* frame) {
+        DECODE_2(BIT_W_VAR_ID, BIT_W_VAR_ID, destID, srcID);
+        ctiTrampoline();
+    }
+
     FORCE_INLINE static string disassemble(int code, FuncMeta* meta) {
         DECODE_2(BIT_W_VAR_ID, BIT_W_VAR_ID, destID, srcID);
         return format("move %s<-%s", VarID(destID).toString(meta).c_str(), VarID(srcID).toString(meta).c_str());
