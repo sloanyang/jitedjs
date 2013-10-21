@@ -36,11 +36,13 @@
 
 // These ASSERTs remind you that, if you change the layout of JITStackFrame, you
 // need to change the assembly trampolines below to match.
+namespace jited {
+
 asm (
 ".text\n"
-".globl " SYMBOL_STRING(ctiTrampoline) "\n"
-HIDE_SYMBOL(ctiTrampoline) "\n"
-SYMBOL_STRING(ctiTrampoline) ":" "\n"
+".globl " SYMBOL_STRING(ctiTrampolinejjs) "\n"
+HIDE_SYMBOL(ctiTrampolinejjs) "\n"
+SYMBOL_STRING(ctiTrampolinejjs) ":" "\n"
     "pushq %rbp" "\n"
     "movq %rsp, %rbp" "\n"
     "pushq %r12" "\n"
@@ -73,4 +75,6 @@ SYMBOL_STRING(ctiTrampoline) ":" "\n"
 HIDE_SYMBOL(ctiTrampolineEnd) "\n"
 SYMBOL_STRING(ctiTrampolineEnd) ":" "\n"
 );
+
+}
 #endif // JITStubsX86_h

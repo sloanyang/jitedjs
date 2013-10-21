@@ -1,7 +1,6 @@
 #ifndef ASSEMBLERX86_H
 #define ASSEMBLERX86_H
 
-#define MAX_LOCAL_COUNT 16
 //============================== 
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,14 +63,14 @@ public:
     int getCodeSize() const{ return m_codeSize;}
 
     void beginBuild(){
-        emit(1, 0x52); // push edx
-        emit(1, 0x55); // push ebp
-        emit(2, 0x8b, 0xec); // mov ebp, esp
-        emit(2, 0x81, 0xec); emitValue(MAX_LOCAL_COUNT * 4); // sub esp, MAX_LOCAL_COUNT * 4
+        emit(1, 0x52); // push rdx
+        emit(1, 0x55); // push rbp
+//        emit(2, 0x8b, 0xec); // mov ebp, esp
+//        emit(2, 0x81, 0xec); emitValue(16*4); // sub esp, MAX_LOCAL_COUNT * 4
     }
     void endBuild(){
-        markLabel(&m_retLabel);
-        emit(2, 0x8b, 0xe5);  // mov esp,ebp 
+//        markLabel(&m_retLabel);
+//        emit(2, 0x8b, 0xe5);  // mov esp,ebp 
         emit(1, 0x5d); // pop ebp  
         emit(1, 0x5a); // pop edx  
         emit(1, 0xc3); // ret

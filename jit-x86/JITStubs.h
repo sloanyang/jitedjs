@@ -5,20 +5,26 @@
 #include "../runtime/JSVM.h"
 
 struct JITStackFrame {
-    JSValue args[4];
-    void* padding[2]; // Maintain 16-byte stack alignment.
+    JSValue args[4];			//sizeof(JSValue) == 16
+	void* padding[1];		
 
-    void* savedEBX;
-    void* savedEDI;
-    void* savedESI;
-    void* savedEBP;
-    void* savedEIP;
+    void* code;					//0x48
+    StackFrame* stack;			
+	void* temp0;				//0x58
+	void* temp1;
+	void* temp2;
+	void* temp3;
 
-    void* code;
-    StackFrame* stack;
+    void* savedRBX;
+    void* savedR15;
+    void* savedR14;
+    void* savedR13;
+    void* savedR12;
+    void* savedRBP;
+    void* savedRIP;
 };
 
 
-extern "C" JSValue ctiTrampoline(void* code, StackFrame*);
+extern "C" JSValue ctiTrampolinejjs(void* code, StackFrame*, void*, void*, void*, void*);
 
 #endif

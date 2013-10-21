@@ -10,8 +10,28 @@
 #include "../bytecode/common.h"
 #include "../jit-x86/AssemblerX86.h"
 #include "../jit-x86/JITStubsX86.h"
+#include <stdio.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <cstring>
 
-char jitedcode[2048];
+char jitedcode[64];
+
+bool ProtectMemory(void * addr, int flags)
+{
+    // Constant holding the page size value
+    const size_t pageSize = sysconf(_SC_PAGE_SIZE);
+
+    // Calculate relative page offset
+    size_t temp = (size_t) addr;
+    temp -= temp % pageSize;
+
+    // Update address
+    addr = (void*) temp;
+
+    // Update memory area protection
+    return !mprotect(addr, pageSize, flags);
+}
 
 enum StubType {
     S_NewFunction, S_NewArray,
@@ -89,20 +109,26 @@ struct StubHandler<S_Move> {
         *dest = *src;
     }
 
-    FORCE_INLINE static void complie(int code, StackFrame* frame) {
+    FORCE_INLINE static void compile(int code, StackFrame* frame) {
         DECODE_2(BIT_W_VAR_ID, BIT_W_VAR_ID, destID, srcID);
 
 		x86AssemblyBuilder* builder = new x86AssemblyBuilder(jitedcode);
 		builder->beginBuild();
-		builder->loadLocal(srcID);
-		builder->storeLocal(destID);
+//		builder->loadLocal(srcID);
+//		builder->storeLocal(destID);
 		builder->ret();
 		builder->endBuild();
+				
     }
 
     FORCE_INLINE static void run(int code, StackFrame* frame) {
         DECODE_2(BIT_W_VAR_ID, BIT_W_VAR_ID, destID, srcID);
-        ctiTrampoline(jitedcode, frame);
+		void* temp0;
+		void* temp1;
+		void* temp2;
+		void* temp3;
+		ProtectMemory((void*)jitedcode, PROT_EXEC | PROT_WRITE | PROT_READ);
+        ctiTrampolinejjs(jitedcode, frame, temp0, temp1, temp2, temp3);
     }
 
     FORCE_INLINE static string disassemble(int code, FuncMeta* meta) {
