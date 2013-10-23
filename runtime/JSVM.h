@@ -12,10 +12,10 @@ struct FuncMeta;
 typedef shared_ptr<FuncMeta> FuncMetaPtr;
 
 struct StackFrame {
-    int oldStackSize;
-    JSFunction *func;
-    JSValue *localConstPtr[2];
-    int ip;
+    int oldStackSize;				//0x0
+    JSFunction *func;				//0x8
+    JSValue *localConstPtr[2];		//0x10 local data, 0x18 static data
+    int ip;							//0x20
     StackFrame(JSFunction *_func, JSValue *_local);
 };
 

@@ -62,6 +62,7 @@ SYMBOL_STRING(ctiTrampolinejjs) ":" "\n"
     "movq $0xFFFF000000000000, %r14" "\n"
     "movq $0xFFFF000000000002, %r15" "\n"
     "movq %rdx, %r13" "\n"
+    "movq %rsi, %rbp" "\n"			//set stack pointer to rbp
     "call *%rdi" "\n"
     "addq $0x78, %rsp" "\n"
     "popq %rbx" "\n"

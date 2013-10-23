@@ -65,14 +65,10 @@ public:
     void beginBuild(){
         emit(1, 0x52); // push rdx
         emit(1, 0x55); // push rbp
-//        emit(2, 0x8b, 0xec); // mov ebp, esp
-//        emit(2, 0x81, 0xec); emitValue(16*4); // sub esp, MAX_LOCAL_COUNT * 4
     }
     void endBuild(){
-//        markLabel(&m_retLabel);
-//        emit(2, 0x8b, 0xe5);  // mov esp,ebp 
-        emit(1, 0x5d); // pop ebp  
-        emit(1, 0x5a); // pop edx  
+        emit(1, 0x5d); // pop rbp  
+        emit(1, 0x5a); // pop rdx  
         emit(1, 0xc3); // ret
     }
 
@@ -81,18 +77,28 @@ public:
     }
 
     void loadLocal(int idx){
-        emit(2, 0xff, 0xb5); emitValue(localIdx2EbpOff(idx)); // push dword ptr [ebp + idxOff]
-    }
+		emit(3, 0x48, 0x89, 0xeb);		//mov rbp rbx
+		emit(4, 0x48, 0x83, 0xc3, localIdx2RbpOff(idx)); //add idxoff, rbx
+		emit(3, 0x48, 0x8b, 0x03);						// mov QWORD PTR [rbx],rax
+	    emit(3, 0xff, 0x70, localIdx2ValueOff(idx)); // push QWORD PTR [rax+idxvalueoff]
+	    emit(3, 0xff, 0x70, localIdx2ValueOff(idx)+0x8); // push QWORD PTR [rax+idxvalueoff+1]
+	}
     void storeLocal(int idx) {
-        emit(3, 0x8b, 0x04, 0x24); // mov eax, dword ptr [esp]
-        emit(2, 0x89, 0x85); emitValue(localIdx2EbpOff(idx)); // mov dword ptr [ebp + idxOff], eax
-        emit(2, 0x83, 0xc4); emitValue((char)4); // add esp, 4
+		emit(3, 0x48, 0x89, 0xeb);		//mov rbp rbx
+		emit(4, 0x48, 0x83, 0xc3, localIdx2RbpOff(idx)); //add idxoff, rbx
+		emit(3, 0x48, 0x8b, 0x03);						// mov QWORD PTR [rbx],rax
+        emit(1, 0x5b);              									// popq rbx
+        emit(4, 0x48, 0x89, 0x58, localIdx2ValueOff(idx)+0x8);	// mov rbx, dword ptr [rax + idxvalueoff+1]
+		emit(1, 0x5b);              									// popq rbx
+        emit(4, 0x48, 0x89, 0x58, localIdx2ValueOff(idx));	// mov rbx, dword ptr [rax + idxvalueoff]
+
+		//emit(1, 0xcc);					//sigabort
     }
     void incLocal(int idx) {
-        emit(2, 0xff, 0x85); emitValue(localIdx2EbpOff(idx)); // inc dword ptr [ebp + idxOff]
+        emit(2, 0xff, 0x85); emitValue(localIdx2RbpOff(idx)); // inc dword ptr [rbp + idxOff]
     }
     void decLocal(int idx) {
-        emit(2, 0xff, 0x8d); emitValue(localIdx2EbpOff(idx)); // dec dword ptr [ebp + idxOff]
+        emit(2, 0xff, 0x8d); emitValue(localIdx2RbpOff(idx)); // dec dword ptr [rbp + idxOff]
     }
     void pop(int n){
         emit(2, 0x81, 0xc4); emitValue(n * 4); // add esp, n * 4
@@ -195,7 +201,12 @@ private:
         label->addRef(ref);
     }
 private:
-    int localIdx2EbpOff(int idx) { return idx < 0 ? 8 - idx * 4 : -(1 + idx) * 4; }
+    int localIdx2RbpOff(int idx) { if (idx >> 7)  
+										return 0x18;
+									else
+										return 0x10;
+								}
+    int localIdx2ValueOff(int idx) { return (idx & 0x3f) * 0x10; }
 private:
     char *m_codeBuf;
     int m_codeSize;

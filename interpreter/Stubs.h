@@ -113,12 +113,15 @@ struct StubHandler<S_Move> {
         DECODE_2(BIT_W_VAR_ID, BIT_W_VAR_ID, destID, srcID);
 
 		x86AssemblyBuilder* builder = new x86AssemblyBuilder(jitedcode);
+
 		builder->beginBuild();
-//		builder->loadLocal(srcID);
-//		builder->storeLocal(destID);
-		builder->ret();
+		//printf("srcID %x, destID %x\n", srcID, destID);
+        //auto srcIDvalue = VarID(srcID).toValue(frame->localConstPtr);
+		//printf("srcID value %x\n", srcIDvalue);
+
+		builder->loadLocal(srcID);
+		builder->storeLocal(destID);
 		builder->endBuild();
-				
     }
 
     FORCE_INLINE static void run(int code, StackFrame* frame) {
@@ -127,6 +130,7 @@ struct StubHandler<S_Move> {
 		void* temp1;
 		void* temp2;
 		void* temp3;
+		//printf("%x, %x, %x, %x\n", jitedcode, frame, frame->localConstPtr[1], *(int*)(((void*)frame)+0x18));
 		ProtectMemory((void*)jitedcode, PROT_EXEC | PROT_WRITE | PROT_READ);
         ctiTrampolinejjs(jitedcode, frame, temp0, temp1, temp2, temp3);
     }
