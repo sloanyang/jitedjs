@@ -22,6 +22,14 @@ Build Environments:
 
 Ubuntu 11.10 x86-64 java version "1.6.0_30" tested. But should be ok for most linux system.
 
+
+IMPORTANT: 
+----------
+* Now only working on x86-64 bit system!!!!!
+* Now only support move function jit
+* If you want a none jit version, please check the interpreter/Interpreter.cpp +18 change the #if 1 to #if 0
+
+
 Step:
 
 * Checkout the tags you want.
@@ -31,7 +39,7 @@ Step:
 
 How to test
 -----------
-./main /test/test.js
+./main /test/test_smaller.js
 
 
 buildin functions
