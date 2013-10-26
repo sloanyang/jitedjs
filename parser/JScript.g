@@ -1,45 +1,163 @@
-/*
-  Copyright 2008 Chris Lambrou.
-  All rights reserved.
-*/
 
-grammar JavaScript;
+grammar JScript;
 
 options
 {
-	output=AST;
-	backtrack=true;
-	memoize=true;
+    language = Cpp;
+	k = 1;
+	//backtrack=true;
+	//memoize=true;
 }
 
-program
-	: LT!* sourceElements LT!* EOF!
-	;
+@lexer::header {
+#include "../runtime/pch.h"
+}
+@lexer::traits {
+    class JScriptLexer; 
+    class JScriptParser; 
+    typedef antlr3::Traits<JScriptLexer, JScriptParser> JScriptLexerTraits;
+    typedef antlr3::Traits<JScriptLexer, JScriptParser> JScriptParserTraits;
+}
+
+@parser::header {
+#include "../runtime/pch.h"
+#include "JScriptLexer.hpp"
+#include "../runtime/AST.h"
+#include "../runtime/SymbolTable.h"
+#include "../bytecode/ByteCode.h"
+#include "../runtime/JSVM.h"
+#include "../runtime/JSFunction.h"
+}
+@parser::members {
+
+static ExprNodePtr getExprNodeFromID(int line, const string& name) {
+    int localIdx = SymbolTable::topTable()->getLocalIdx(name);
+    if (localIdx == -1) {
+        int constIdx = SymbolTable::topTable()->getMeta()->getConstIdx(JSValue::fromString(name.c_str()));
+        return ExprNodePtr(new ExprNode_Global(line, constIdx));
+    }
+    else return ExprNodePtr(new ExprNode_Local(line, localIdx));
+}
+static ExprNodePtr getExprNodeFromConst(int line, const JSValue& cv) {
+    int constIdx = SymbolTable::topTable()->getMeta()->getConstIdx(cv);
+    return ExprNodePtr(new ExprNode_Const(line, constIdx));
+}
+
+static string unEscape(const string& s) {
+    string r;
+    for (int i = 0; i < (int)s.size(); ++i) {
+        if (s[i] == '\\') {
+            switch (s[i + 1]) {
+            case 'a': r.push_back('\a'); break;
+            case 'n': r.push_back('\n'); break;
+            case 'r': r.push_back('\r'); break;
+            case 't': r.push_back('\t'); break;
+            default: r.push_back(s[i + 1]); break;
+            }
+            ++i;
+        } else {
+            r.push_back(s[i]);
+        }
+    }
+    return r;
+}
+
+}
+
+
+
+//syntax
+program [const char *fileName]returns[FuncMetaPtr value]: 
+		{
+        	value.reset(new FuncMeta(fileName));
+        	value->stmt.reset(new StmtNode_Block());
+        	SymbolTable::pushTable(value);
+        }
+	 	LT!* sourceElements LT!* EOF! 
+		{
+        	value->localCount = SymbolTable::topTable()->getMaxLocalIdx();
+        	SymbolTable::popTable();
+        	emitCode(value);
+        };
+
 	
 sourceElements
-	: sourceElement (LT!* sourceElement)*
+	:  sourceElement 
+		{
+			if ($sourceElement.value != NULL) {
+				static_cast<StmtNode_Block*>(value->stmt.get())->stmts.push_back($statement.value);
+            }
+        }
+	  (
+      LT!* sourceElement 
+
+		{
+			if ($sourceElement.value != NULL) {
+				static_cast<StmtNode_Block*>(value->stmt.get())->stmts.push_back($statement.value);
+            }
+        }
+
+	  )*
 	;
 	
-sourceElement
+sourceElement returns[StmtNodePtr value]
 	: functionDeclaration
+	{
+		value = $functionDeclaration.value;
+	}
 	| statement
+	{
+		value = $statement.value;
+	}
 	;
 	
 // functions
-functionDeclaration
-	: 'function' LT!* Identifier LT!* formalParameterList LT!* functionBody
+functionDeclaration returns[StmtNodePtr value]
+	: func = 'function' LT!* Identifier functionBody 
+	{
+        value = StmtNodePtr(new StmtNode_Assign($func.line, getExprNodeFromID($Identifier.line, $Identifier.text), $functionBody.value));
+    }
 	;
 	
 functionExpression
-	: 'function' LT!* Identifier? LT!* formalParameterList LT!* functionBody
+	: 'function' LT!* Identifier? functionBody
 	;
 	
-formalParameterList
-	: '(' (LT!* Identifier (LT!* ',' LT!* Identifier)*)? LT!* ')'
+functionBody returns[ExprNodePtr value]
+scope {
+    FuncMetaPtr meta;
+}
+	: LT!* lp= formalParameterList LT!*
+	{
+        $functionBody::meta.reset(new FuncMeta(SymbolTable::topTable()->getMeta()->fileName));
+        auto meta = $functionBody::meta;
+        SymbolTable::pushTable(meta);
+        meta->stmt.reset(new StmtNode_Block());
+        meta->argCount = (int)$formalParameterList.values.size();
+        for (auto &name : $formalParameterList.values) {
+            SymbolTable::topTable()->declareLocal(name);
+        }
+    } 
+	 '{' LT!* sourceElements LT!* '}'
+	{
+        auto meta = $functionBody::meta;
+        meta->localCount = SymbolTable::topTable()->getMaxLocalIdx();
+        SymbolTable::popTable();
+        emitCode(meta);
+        value = ExprNodePtr(new ExprNode_Lambda($lp.line, JSVM::instance()->getMetaIdx(meta)));
+    }
 	;
 
-functionBody
-	: '{' LT!* sourceElements LT!* '}'
+formalParameterList returns[vector<string> values]
+	: '(' (LT!* a=Identifier 
+	{
+        values.push_back($a.text);
+    } 
+	(LT!* ',' LT!* b=Identifier
+	{
+        values.push_back($b.text);
+	}
+	)*)? LT!* ')'
 	;
 
 // statements
