@@ -5,8 +5,6 @@ options
 {
     language = Cpp;
 	k = 1;
-	//backtrack=true;
-	//memoize=true;
 }
 
 @lexer::header {
@@ -161,10 +159,20 @@ formalParameterList returns[vector<string> values]
 	;
 
 // statements
-statement
-	: statementBlock
+statement returns[StmtNodePtr value]
+	:
+	{
+        value.reset(new StmtNode_Block());
+    }
+	statementBlock
+		 
 	| variableStatement
-	| emptyStatement
+	{
+		value = $variableStatement.value;
+	}
+
+	| emptyStatement					//Do nothing
+
 	| expressionStatement
 	| ifStatement
 	| iterationStatement
@@ -179,19 +187,54 @@ statement
 	;
 	
 statementBlock
-	: '{' LT!* statementList? LT!* '}'
+	: 
+	'{' 
+	{
+        SymbolTable::topTable()->pushBlock();
+    }  
+	LT!* statementList? LT!* 
+	'}'
+	{
+        SymbolTable::topTable()->popBlock();
+    }
 	;
 	
 statementList
-	: statement (LT!* statement)*
+	: 
+	a=statement 
+	{
+		if ($a.value != NULL) {
+			static_cast<StmtNode_Block*>(value.get())->stmts.push_back($a.value);
+		}
+	}
+	(LT!* b=statement
+	{
+		if ($b.value != NULL) {
+			static_cast<StmtNode_Block*>(value.get())->stmts.push_back($b.value);
+		}
+	}
+	)*
 	;
 	
-variableStatement
+variableStatement returns[StmtNodePtr value]		//We should check the standard return value of this statement!
 	: 'var' LT!* variableDeclarationList (LT | ';')!
+	{
+        for (auto &name : $variableDeclarationList.values) {
+            SymbolTable::topTable()->declareLocal(name);
+        }
+    }
 	;
 	
-variableDeclarationList
-	: variableDeclaration (LT!* ',' LT!* variableDeclaration)*
+variableDeclarationList returns[vector<string> values]
+	: a=variableDeclaration 
+	{
+        values.push_back($a.text);
+    } 
+	(LT!* ',' LT!* b=variableDeclaration
+	{
+        values.push_back($b.text);
+    }
+	)*
 	;
 	
 variableDeclarationListNoIn
@@ -218,8 +261,11 @@ emptyStatement
 	: ';'
 	;
 	
-expressionStatement
+expressionStatement returns[StmtNodePtr value]
 	: expression (LT | ';')!
+	{ 
+		value = $expression.value;
+	}
 	;
 	
 ifStatement
@@ -312,17 +358,38 @@ finallyClause
 	;
 
 // expressions
-expression
-	: assignmentExpression (LT!* ',' LT!* assignmentExpression)*
+expression returns[StmtNodePtr value]
+	: assignmentExpression 
+	{
+		if ($assignmentExpression.value != NULL) {
+			static_cast<StmtNode_Block*>(value->stmt.get())->stmts.push_back($assignmentExpression.value);
+		}
+    }
+	(LT!* ',' LT!* assignmentExpression
+	{
+		if ($assignmentExpression.value != NULL) {
+			static_cast<StmtNode_Block*>(value->stmt.get())->stmts.push_back($assignmentExpression.value);
+		}
+    }
+
+	)*
 	;
 	
 expressionNoIn
 	: assignmentExpressionNoIn (LT!* ',' LT!* assignmentExpressionNoIn)*
 	;
 	
-assignmentExpression
-	: conditionalExpression
+assignmentExpression returns[StmtNodePtr value]
+	: conditionalExpression							//Currently not supported !!
+
 	| leftHandSideExpression LT!* assignmentOperator LT!* assignmentExpression
+	{
+        auto rightExpr = $assignmentExpression.value;
+        if ($assignmentOperator.text != "=") {
+            rightExpr = ExprNodePtr(new ExprNode_BinaryOp($assignmentExpression.value->line, $assignmentOperator.text.substr(0, 1), $leftHandSideExpression.value, rightExpr));
+        }
+        value = StmtNodePtr(new StmtNode_Assign($leftHandSideExpression.value->line, $leftHandSideExpression.value, rightExpr));
+    }
 	;
 	
 assignmentExpressionNoIn
@@ -330,14 +397,14 @@ assignmentExpressionNoIn
 	| leftHandSideExpression LT!* assignmentOperator LT!* assignmentExpressionNoIn
 	;
 	
-leftHandSideExpression
-	: callExpression
+leftHandSideExpression returns[ExprNodePtr value]
+	: callExpression		//Currently not supported!						
 	| newExpression
 	;
 	
-newExpression
+newExpression returns[ExprNodePtr value]
 	: memberExpression
-	| 'new' LT!* newExpression
+	| 'new' LT!* newExpression	//Currently not supported!
 	;
 	
 memberExpression
@@ -461,7 +528,7 @@ postfixExpression
 	;
 
 primaryExpression
-	: 'this'
+	: 'this'							//Currently not supported!	
 	| Identifier
 	| literal
 	| arrayLiteral
